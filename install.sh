@@ -2,6 +2,9 @@
 # Dark Nights Rising installer
 # https://github.com/xvoidsx/DarkNightsRising
 #
+# Debian-centric for now (navi is Debian-based). Arch/Nix/Fedora flows
+# will come later.
+#
 # Installs dependencies (piper-tts for voices, mpg123 for soundtrack)
 # and makes the game globally playable as `darknightsrising`.
 #
@@ -12,24 +15,17 @@ set -euo pipefail
 say() { printf '  -> %s\n' "$*"; }
 
 install_deps() {
+  if ! command -v apt-get >/dev/null 2>&1; then
+    echo "This installer currently supports Debian/Ubuntu-based systems only." >&2
+    echo "Arch/Nix/Fedora support is on the roadmap." >&2
+    exit 1
+  fi
   say "installing dependencies..."
-  if command -v apt-get >/dev/null 2>&1; then
-    sudo apt-get update
-    sudo apt-get install -y mpg123 dialog libnotify-bin
-    # piper-tts via pipx (stays current)
-    if ! command -v pipx >/dev/null 2>&1; then
-      sudo apt-get install -y pipx
-    fi
-  elif command -v dnf >/dev/null 2>&1; then
-    sudo dnf install -y mpg123 dialog libnotify
-    if ! command -v pipx >/dev/null 2>&1; then
-      sudo dnf install -y pipx
-    fi
-  elif command -v pacman >/dev/null 2>&1; then
-    sudo pacman -Sy --noconfirm mpg123 dialog libnotify
-    if ! command -v pipx >/dev/null 2>&1; then
-      sudo pacman -Sy --noconfirm python-pipx
-    fi
+  sudo apt-get update
+  sudo apt-get install -y mpg123 dialog libnotify-bin
+  # piper-tts via pipx (stays current)
+  if ! command -v pipx >/dev/null 2>&1; then
+    sudo apt-get install -y pipx
   fi
 
   if ! command -v piper >/dev/null 2>&1; then
