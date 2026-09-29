@@ -38,6 +38,11 @@ _dnr_tts_engine() {
   fi
 }
 
+# PID of the most recent background TTS process. Used by say_wait to
+# prevent voice overlap — each line finishes speaking before the next
+# begins.
+_dnr_say_pid=""
+
 _say_piper() { # <voice-model> <text>
   local model="$1" text="$2"
   local model_path="$DNR_VOICE_DIR/${model}.onnx"
@@ -45,6 +50,7 @@ _say_piper() { # <voice-model> <text>
   # rather than invoking piper without --model (which fails).
   if [ -f "$model_path" ] && command -v aplay >/dev/null 2>&1; then
     echo "$text" | piper --model "$model_path" --output-raw 2>/dev/null | aplay -q -r 22050 -f S16_LE -t raw - 2>/dev/null &
+    _dnr_say_pid=$!
   fi
 }
 
@@ -64,15 +70,25 @@ say() { # <character> <text> — the voice of the game
     flite)
       # legacy fallback — the original DNR voices
       case "$character" in
-        raven)    flite -voice rms "$text" 2>/dev/null & ;;
-        demon)    flite -voice kal "$text" 2>/dev/null & ;;
-        *)        flite -voice slt "$text" 2>/dev/null & ;;
+        raven)    flite -voice rms "$text" 2>/dev/null & _dnr_say_pid=$! ;;
+        demon)    flite -voice kal "$text" 2>/dev/null & _dnr_say_pid=$! ;;
+        *)        flite -voice slt "$text" 2>/dev/null & _dnr_say_pid=$! ;;
       esac
       ;;
     espeak)
-      espeak "$text" 2>/dev/null &
+      espeak "$text" 2>/dev/null & _dnr_say_pid=$!
       ;;
   esac
+}
+
+say_wait() { # <character> <text> — speak and wait for the voice to finish
+  _dnr_say_pid=""
+  say "$1" "$2"
+  if [ -n "$_dnr_say_pid" ]; then
+    wait "$_dnr_say_pid" 2>/dev/null || true
+  fi
+  # small beat after the voice finishes before the next line
+  sleep "${DNR_LINE_PAUSE:-0.5}"
 }
 
 # ── cinematic text ──────────────────────────────────────
@@ -101,23 +117,20 @@ typewrite() { # <text> [color]
 }
 
 narrate() { # <text> — the narrator's voice, dim and steady
-  # Print instantly so text and voice land together, then pause to let
-  # the voice finish before the next line.
+  # Print instantly so text and voice land together, then wait for the
+  # voice to finish before the next line (no overlap).
   printf '%s%s%s\n' "$DNR_DIM" "$1" "$DNR_OFF"
-  say narrator "$1"
-  sleep "${DNR_LINE_PAUSE:-2}"
+  say_wait narrator "$1"
 }
 
 raven_says() { # <text> — Raven, your guide (cyan)
   printf '%sRaven:%s %s\n' "$DNR_CYAN" "$DNR_OFF" "$1"
-  say raven "$1"
-  sleep "${DNR_LINE_PAUSE:-2}"
+  say_wait raven "$1"
 }
 
 demon_says() { # <text> — the Demon (red, slower)
   printf '%sDemon:%s %s%s%s\n' "$DNR_RED" "$DNR_OFF" "$DNR_RED" "$1" "$DNR_OFF"
-  say demon "$1"
-  sleep "${DNR_LINE_PAUSE:-2}"
+  say_wait demon "$1"
 }
 
 scene_title() { # <chapter> <title>
