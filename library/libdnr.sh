@@ -101,21 +101,23 @@ typewrite() { # <text> [color]
 }
 
 narrate() { # <text> — the narrator's voice, dim and steady
-  typewrite "$1" "$DNR_DIM"
+  # Print instantly so text and voice land together, then pause to let
+  # the voice finish before the next line.
+  printf '%s%s%s\n' "$DNR_DIM" "$1" "$DNR_OFF"
   say narrator "$1"
+  sleep "${DNR_LINE_PAUSE:-2}"
 }
 
 raven_says() { # <text> — Raven, your guide (cyan)
-  printf '%sRaven:%s ' "$DNR_CYAN" "$DNR_OFF"
-  typewrite "$1" ""
+  printf '%sRaven:%s %s\n' "$DNR_CYAN" "$DNR_OFF" "$1"
   say raven "$1"
+  sleep "${DNR_LINE_PAUSE:-2}"
 }
 
 demon_says() { # <text> — the Demon (red, slower)
-  printf '%sDemon:%s ' "$DNR_RED" "$DNR_OFF"
-  # demons speak slowly — override speed
-  typewrite "$1" "$DNR_RED"
+  printf '%sDemon:%s %s%s%s\n' "$DNR_RED" "$DNR_OFF" "$DNR_RED" "$1" "$DNR_OFF"
   say demon "$1"
+  sleep "${DNR_LINE_PAUSE:-2}"
 }
 
 scene_title() { # <chapter> <title>
@@ -178,15 +180,21 @@ _choice_select() {
 }
 
 # ── soundtrack ──────────────────────────────────────────
+# Music sits under the voices. DNR_MUSIC_VOLUME is a percentage (1-100),
+# default 12 — piper voices are quiet next to the soundtrack, so the
+# music needs to stay well back.
+DNR_MUSIC_VOLUME="${DNR_MUSIC_VOLUME:-12}"
+
 play_track() { # <track-path>
   local track="$1"
   if [ ! -f "$track" ]; then
     return 0  # missing track — stay silent, don't error
   fi
   if command -v mpg123 >/dev/null 2>&1; then
-    mpg123 -q "$track" >/dev/null 2>&1 &
+    # -f scales 0-32768; convert percentage
+    mpg123 -q -f $(( 32768 * DNR_MUSIC_VOLUME / 100 )) "$track" >/dev/null 2>&1 &
   elif command -v mpv >/dev/null 2>&1; then
-    mpv --no-video --really-quiet "$track" >/dev/null 2>&1 &
+    mpv --no-video --really-quiet --volume="$DNR_MUSIC_VOLUME" "$track" >/dev/null 2>&1 &
   fi
 }
 
