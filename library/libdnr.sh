@@ -167,28 +167,23 @@ dnr_read() { # <prompt> <var-name>
 }
 
 choice() { # <prompt> <opt1> <opt2> ...
+  # Simple numbered menu using dnr_read — more predictable than the
+  # select builtin inside command substitution. Prints the chosen
+  # option text to stdout for capture.
   local prompt="$1"; shift
   local opts=("$@")
   printf '\n%s%s%s\n' "$DNR_BOLD" "$prompt" "$DNR_OFF"
-  # select reads from stdin; redirect from /dev/tty when available so
-  # input works even if the game's stdin was redirected.
-  if [ -c /dev/tty ]; then
-    _choice_select "$@" < /dev/tty
-  else
-    _choice_select "$@"
-  fi
-}
-
-_choice_select() {
-  local opts=("$@")
-  local opt
-  select opt in "${opts[@]}"; do
-    if [ -n "$opt" ]; then
-      echo "$opt"
+  local i reply
+  for i in "${!opts[@]}"; do
+    printf '  %d) %s\n' $((i+1)) "${opts[$i]}"
+  done
+  while true; do
+    dnr_read "  > " reply
+    if [[ "$reply" =~ ^[0-9]+$ ]] && [ "$reply" -ge 1 ] && [ "$reply" -le "${#opts[@]}" ]; then
+      printf '%s\n' "${opts[$((reply-1))]}"
       return 0
-    else
-      echo "That isn't a valid choice. Try again." >&2
     fi
+    printf 'That isn'"'"'t a valid choice. Try again.\n' >&2
   done
 }
 
