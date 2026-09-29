@@ -7,7 +7,7 @@ source library/libdnr.sh
 
 CHAPTER="CHAPTER 3"
 TITLE="LAMENT"
-SOUNDTRACK="soundtrack/kasper_the_deadly_gh0st.mp3"
+SOUNDTRACK="soundtrack/is0lation.mp3"
 
 open_narrate=(
   "As the darkness dissipates and the voices fade away, you start to realize that you are in a sort of cave — a linear path forward, with only the dimmest of lights at the end."

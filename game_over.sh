@@ -4,7 +4,7 @@ set -euo pipefail
 source playerconfig.txt
 source library/libdnr.sh
 
-SOUNDTRACK="soundtrack/deaths_door.mp3"
+SOUNDTRACK="soundtrack/is0lation.mp3"
 
 lines=(
   "They say if you die in a dream, you die in real life."

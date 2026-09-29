@@ -7,7 +7,7 @@ source library/libdnr.sh
 
 CHAPTER="CHAPTER 2"
 TITLE="A DEMONIC PRESENCE"
-SOUNDTRACK="soundtrack/time_space.mp3"
+SOUNDTRACK="soundtrack/c0py_(of-a-c0py).mp3"
 
 # opening narration
 open_lines=(

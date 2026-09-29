@@ -41,11 +41,10 @@ _dnr_tts_engine() {
 _say_piper() { # <voice-model> <text>
   local model="$1" text="$2"
   local model_path="$DNR_VOICE_DIR/${model}.onnx"
-  if [ -f "$model_path" ]; then
+  # piper requires a model file — if it's not downloaded, stay silent
+  # rather than invoking piper without --model (which fails).
+  if [ -f "$model_path" ] && command -v aplay >/dev/null 2>&1; then
     echo "$text" | piper --model "$model_path" --output-raw 2>/dev/null | aplay -q -r 22050 -f S16_LE -t raw - 2>/dev/null &
-  else
-    # model not downloaded yet — speak with default piper voice
-    echo "$text" | piper --output-raw 2>/dev/null | aplay -q -r 22050 -f S16_LE -t raw - 2>/dev/null &
   fi
 }
 
@@ -114,7 +113,6 @@ raven_says() { # <text> — Raven, your guide (cyan)
 
 demon_says() { # <text> — the Demon (red, slower)
   printf '%sDemon:%s ' "$DNR_RED" "$DNR_OFF"
-  local saved_fast="$DNR_FAST"
   # demons speak slowly — override speed
   typewrite "$1" "$DNR_RED"
   say demon "$1"
@@ -140,16 +138,41 @@ dramatic_pause() { # [seconds]
 }
 
 # ── choices ─────────────────────────────────────────────
+# Read from /dev/tty so input works even when stdin is redirected
+# (e.g. launched from a desktop file or piped through a wrapper).
+dnr_read() { # <prompt> <var-name>
+  local prompt="$1" var="$2"
+  local value
+  if [ -c /dev/tty ]; then
+    read -rp "$prompt" value < /dev/tty
+  else
+    read -rp "$prompt" value
+  fi
+  printf -v "$var" '%s' "$value"
+}
+
 choice() { # <prompt> <opt1> <opt2> ...
   local prompt="$1"; shift
   local opts=("$@")
   printf '\n%s%s%s\n' "$DNR_BOLD" "$prompt" "$DNR_OFF"
+  # select reads from stdin; redirect from /dev/tty when available so
+  # input works even if the game's stdin was redirected.
+  if [ -c /dev/tty ]; then
+    _choice_select "$@" < /dev/tty
+  else
+    _choice_select "$@"
+  fi
+}
+
+_choice_select() {
+  local opts=("$@")
+  local opt
   select opt in "${opts[@]}"; do
     if [ -n "$opt" ]; then
       echo "$opt"
       return 0
     else
-      echo "That isn't a valid choice. Try again."
+      echo "That isn't a valid choice. Try again." >&2
     fi
   done
 }
@@ -157,6 +180,9 @@ choice() { # <prompt> <opt1> <opt2> ...
 # ── soundtrack ──────────────────────────────────────────
 play_track() { # <track-path>
   local track="$1"
+  if [ ! -f "$track" ]; then
+    return 0  # missing track — stay silent, don't error
+  fi
   if command -v mpg123 >/dev/null 2>&1; then
     mpg123 -q "$track" >/dev/null 2>&1 &
   elif command -v mpv >/dev/null 2>&1; then

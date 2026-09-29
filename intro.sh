@@ -8,7 +8,7 @@ TITLE="DARK NIGHTS RISING"
 
 main() {
   clear
-  play_track "soundtrack/haunted.mp3"
+  play_track "soundtrack/is0lation.mp3"
 
   printf '%s' "$DNR_MAGENTA"
   cat << 'EOF'
@@ -32,19 +32,19 @@ EOF
   dramatic_pause 1
 
   raven_says "So, wanderer. What is your name?"
-  read -rp "  > " NAME
+  dnr_read "  > " NAME
 
   raven_says "It is nice to meet you, $NAME. Now let us learn a little more."
   dramatic_pause 1
 
   raven_says "What would you like to call your character?"
-  read -rp "  > " CHARNAME
+  dnr_read "  > " CHARNAME
 
   raven_says "Excellent. What race will $CHARNAME hail from? Be creative."
-  read -rp "  > " RACE
+  dnr_read "  > " RACE
 
   raven_says "So $CHARNAME is of the $RACE people. Where does $CHARNAME call home? Name their kingdom."
-  read -rp "  > " PLACE
+  dnr_read "  > " PLACE
 
   dramatic_pause 1
   narrate "So, $NAME. Your character is $CHARNAME, of the $RACE, from the kingdom of $PLACE."

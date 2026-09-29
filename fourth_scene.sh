@@ -7,7 +7,7 @@ source library/libdnr.sh
 
 CHAPTER="CHAPTER 4"
 TITLE="THE HALL OF LUST"
-SOUNDTRACK="soundtrack/sinful.mp3"
+SOUNDTRACK="soundtrack/c0py.mp3"
 
 open_lines=(
   "After reaching the end of the overwhelmingly long hallway, you feel as if you are freezing cold. As you look around you, you notice ice on the walls and clouds forming from your breath."

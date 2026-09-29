@@ -5,7 +5,7 @@ source playerconfig.txt
 source library/libdnr.sh
 declare -i SAVE_STATE_TAG=1
 readonly storyfile="stories/first_scene.txt"
-soundtrack_audio="soundtrack/awakening.mp3"
+soundtrack_audio="soundtrack/c0py.mp3"
 title_scene1="$(cat << EOF
 #############################################
 #                                           #
@@ -66,7 +66,7 @@ back_away_from_mirror () {
 }
 main () {
   clear
-  execute_track $soundtrack_audio
+  play_track "$soundtrack_audio"
   printf '%s\n' "${title_scene1}"; sleep 3; small_loader_progression
   echo "${line1}" & say rms "${line1}"; sleep 1
   echo "${line2}" & say rms "${line2}"; sleep 1
